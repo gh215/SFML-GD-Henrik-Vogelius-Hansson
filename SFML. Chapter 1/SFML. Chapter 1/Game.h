@@ -5,7 +5,8 @@
 using namespace std;
 using namespace sf;
 
-const float PlayerSpeed = 1.f;
+const float PlayerSpeed = 300.f;
+const auto TimePerFrame = seconds(1.f / 60.f);
 
 class Game
 {
@@ -14,7 +15,7 @@ public:
 	void run();
 private:
 	void processEvents();
-	void update();
+	void update(Time deltaTime);
 	void render();
 	void handlePlayerInput(Keyboard::Key, bool isPressed);
 	bool mIsMovingUp = false;
@@ -38,10 +39,17 @@ void Game::run()
 	Clock clock;
 	Time timeSinceLastUpdate = Time::Zero;
 	while (mWindow.isOpen())
-	{
-		Time deltaTime = clock.restart();
+	{		
 		processEvents();
-		update();
+		timeSinceLastUpdate += clock.restart();
+
+		while (timeSinceLastUpdate > TimePerFrame)
+		{
+			timeSinceLastUpdate -= TimePerFrame;
+			update(TimePerFrame);
+			processEvents();
+			
+		}
 		render();
 	}
 }
@@ -74,7 +82,7 @@ void Game::processEvents()
 	}
 }
 
-void Game::update()
+void Game::update(Time deltaTime)
 {
 	Vector2f movement(0.f, 0.f);
 	if (mIsMovingUp) movement.y -= PlayerSpeed;
@@ -82,7 +90,7 @@ void Game::update()
 	if (mIsMovingLeft) movement.x -= PlayerSpeed;
 	if (mIsMovingRight) movement.x += PlayerSpeed;
 
-	mPlayer.move(movement);
+	mPlayer.move(movement * deltaTime.asSeconds());
 }
 
 void Game::render()
